@@ -1,4 +1,4 @@
-package util;
+package flibs.util;
 
 public class StringUtilities {
 	public static String removeLastCharacter(String str) {

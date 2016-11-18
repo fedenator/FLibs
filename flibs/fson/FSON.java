@@ -1,11 +1,11 @@
-package fson;
+package flibs.fson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import util.StringUtilities;
+import flibs.util.StringUtilities;
 
 /**
  * Un elemento que puede tener valores y sub elementos

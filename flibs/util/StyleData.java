@@ -1,4 +1,4 @@
-package util;
+package flibs.util;
 
 /**
  * Representa un dato que puede ser absoluto o relativo
