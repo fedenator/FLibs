@@ -14,7 +14,7 @@ import util.StringUtilities;
  * @author fpalacios
  *
  */
-//Eclipse testing
+//Eclipse testing 2
 public class FSON {
 	/*---------------------- Constantes -----------------------------*/
 	public static final Character tab='\t', br='\n', spliter=';', entrySpliter='=';
