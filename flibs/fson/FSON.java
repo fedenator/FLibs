@@ -14,7 +14,6 @@ import flibs.util.StringUtilities;
  * @author fpalacios
  *
  */
-//Eclipse testing 2
 public class FSON {
 	/*---------------------- Constantes -----------------------------*/
 	public static final Character tab='\t', br='\n', spliter=';', entrySpliter='=';
@@ -43,12 +42,14 @@ public class FSON {
 	
 	/*-------------------------- Funciones --------------------------*/
 	public void loadFromString(String str) {
-		ArrayList<Character> param = new ArrayList<Character>();
-		for (char character : str.toCharArray()) param.add(character);
+		//Saco los espacios, tabuladores y enters
+		ArrayList<Character> param = removeRedundantCharacters(str);
+		
 		//Hack =(
 		FSON fackeParent = new FSON(), fson = loadFromStringRecursive(fackeParent, param);
 		this.subElements = fson.subElements;
 		this.values = fson.values;
+		
 	}
 	
 	private static FSON loadFromStringRecursive(FSON parent, ArrayList<Character> list) {
@@ -57,16 +58,6 @@ public class FSON {
 		int bracketCounter = 0;
 		boolean inSemiclone = false;
 		ArrayList<ArrayList<Character>> subElements = new ArrayList<ArrayList<Character>>();
-		
-		//borra todos los espacios saltos de linea y tabuladores
-		for(Iterator<Character> it = list.iterator(); it.hasNext();) {
-			Character character = it.next();
-			
-			if (character == '\"') inSemiclone = (inSemiclone) ? false : true;
-			
-			//Si es un espacio, tab o enter y no esta entre comillas los saco
-			else if ((character == ' ' || character == '\n' || character == '\t') && !inSemiclone)it.remove();
-		}
 		
 		subElements.add(new ArrayList<Character>());
 		
@@ -87,8 +78,11 @@ public class FSON {
 			}
 		}
 		
+		subElements.remove(subElements.size()-1);
 		//Asigna los valores de los nodos
 		for (ArrayList<Character> subElement : subElements) {
+			
+			
 			//Si es un subElmento
 			if(subElement.contains('{')) { //Habria que revisar que las { no esten entree comillas
 				String key = "";
@@ -130,7 +124,7 @@ public class FSON {
 				String line="", key="", value="";
 				for (Character character : subElement) line += "" + character;
 				key = line.split("" + entrySpliter)[0];
-				value = line.split("" + entrySpliter)[0];
+				value = line.split("" + entrySpliter)[1];
 				if (value.startsWith("\""))flag.addValue(key, value.replaceAll("\"", ""));//logicamente no puede haber comillas dentro de un texto
 				else if (value.equalsIgnoreCase("true")) flag.addValue(key, true);
 				else if (value.equalsIgnoreCase("false")) flag.addValue(key, false);
@@ -202,6 +196,21 @@ public class FSON {
 		return flag;
 	}
 	
+	private ArrayList<Character> removeRedundantCharacters(String str) {
+		ArrayList<Character> flag = new ArrayList<Character>();
+		
+		boolean inSemiclone = false;
+		char[] aux = str.toCharArray();
+		for (char character : aux) {
+			if (character == '\"')inSemiclone = (inSemiclone) ? false : true;
+			
+			if ( !((character == ' ' || character == '\n' || character == '\t') && !inSemiclone) )
+			flag.add(character);
+		}
+		
+		return flag;
+	}
+	
 	private boolean isArray(Object obj) {
 		return (obj instanceof int[] || obj instanceof double[] || obj instanceof boolean[]);
 	}
@@ -213,7 +222,7 @@ public class FSON {
 	
 	/*--------------------- Manejo de subElementos ------------------*/
 	/**
-	 * A�ade un fson y le dice que el es su padre(A lo starwars) 
+	 * Add un fson y le dice que el es su padre(A lo starwars) 
 	 */
 	public void addSubElement(FSON fson){
 		if(fson.parent != this)fson.setParent(this);
