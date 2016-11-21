@@ -6,18 +6,24 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import flibs.util.StringUtilities;
+import flibs.util.StyleData;
 
 /**
  * Un elemento que puede tener valores y sub elementos
  * Los valores soportados son boolean, double, int y String
- * Un valor
+ * Un valor tiene una key(string) y un objeto
  * @author fpalacios
  *
  */
 public class FSON {
+	public enum Type {
+		STRING, INT, DOUBLE, BOOLEAN, STYLE_DATA;
+	}
+	
+	
 	/*---------------------- Constantes -----------------------------*/
 	public static final Character tab='\t', br='\n', spliter=';', entrySpliter='=';
-	
+
 	/*----------------------  Propiedades ---------------------------*/
 	private FSON parent;
 	private String key;
@@ -125,11 +131,28 @@ public class FSON {
 				for (Character character : subElement) line += "" + character;
 				key = line.split("" + entrySpliter)[0];
 				value = line.split("" + entrySpliter)[1];
-				if (value.startsWith("\""))flag.addValue(key, value.replaceAll("\"", ""));//logicamente no puede haber comillas dentro de un texto
-				else if (value.equalsIgnoreCase("true")) flag.addValue(key, true);
-				else if (value.equalsIgnoreCase("false")) flag.addValue(key, false);
-				else if (value.contains(".")) flag.addValue(key, Double.parseDouble(value));
-				else if (!value.isEmpty()) flag.addValue(key, Integer.parseInt(value));
+				
+				for (;;) {
+				
+					switch (getType(value)) {
+					case STRING:
+						flag.addValue(key, value.replaceAll("\"", ""));
+						break;
+						
+					case BOOLEAN:
+					case DOUBLE:
+					case INT:
+						flag.addValue(key, value.toString());
+						break;
+						
+					case STYLE_DATA:
+						StyleData styleData = (value.toLowerCase().contains("px"))?
+								new StyleData(StyleData.UNIT_PIXELS ,Integer.parseInt(value.toLowerCase().replace("px", ""))): 
+									new StyleData(StyleData.UNIT_PERCENTAGE ,Integer.parseInt(value.toLowerCase().replace("%", "")));
+						flag.addValue(key, styleData);
+						break;
+					}	
+				}
 			}
 		}
 		
@@ -185,6 +208,17 @@ public class FSON {
 		
 		return flag;
 	}
+	private static Type getType(String value) {
+		Type type = null;
+		
+		if (value.startsWith("\"")) type = Type.STRING;//logicamente no puede haber comillas dentro de un texto
+		else if (value.endsWith("%") || value.endsWith("px")) type = Type.STYLE_DATA;
+		else if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) type = Type.BOOLEAN;
+		else if (value.contains(".")) type = Type.DOUBLE;
+		else if (!value.isEmpty()) type = Type.INT;
+		
+		return type;
+	}
 	
 	private String getDataFormat(Object obj) {
 		String flag = "";
@@ -225,6 +259,7 @@ public class FSON {
 	 * Add un fson y le dice que el es su padre(A lo starwars) 
 	 */
 	public void addSubElement(FSON fson){
+		subElements.add(fson);
 		if(fson.parent != this)fson.setParent(this);
 	}
 	public FSON[] getSubElements() {
@@ -254,6 +289,9 @@ public class FSON {
 	public void addValue(String key, boolean value) {
 		values.put(key, value);
 	}
+	public void addValue(String key, StyleData value) {
+		values.put(key, value);
+	}
 	
 	public void addArray(String key, String[] value) {
 		values.put(key, value);
@@ -265,6 +303,9 @@ public class FSON {
 		values.put(key, value);
 	}
 	public void addArray(String key, boolean[] value) {
+		values.put(key, value);
+	}
+	public void addArray(String key, StyleData[] value) {
 		values.put(key, value);
 	}
 	
@@ -283,21 +324,27 @@ public class FSON {
 	public boolean getBooleanValue(String key) {
 		return (boolean) values.get(key);
 	}
+	public StyleData getStyleDataValue(String key) {
+		return (StyleData) values.get(key);
+	}
 	
 	public Object getQuickValue() {
 		return values.values().toArray()[0];
 	}
 	public String getStringQuickValue() {
-		return "" + values.values().toArray()[0];
+		return (String) values.values().iterator().next();
 	}
 	public int getIntQuickValue() {
-		return (int)values.values().toArray()[0];
+		return (int) values.values().iterator().next();
 	}
 	public double getDoubleQuickValue() {
-		return (double)values.values().toArray()[0];
+		return (double) values.values().iterator().next();
 	}
 	public boolean getBooleanQuickValue() {
-		return (boolean)values.values().toArray()[0];
+		return (boolean) values.values().iterator().next();
+	}
+	public StyleData getStyleDataQuickValue() {
+		return (StyleData) values.values().iterator().next();
 	}
 	
 	public Object[] getArray(String key) {
@@ -315,6 +362,9 @@ public class FSON {
 	public boolean[] getBooleanArray(String key) {
 		return (boolean[]) values.get(key);
 	}
+	public StyleData[] getStyleDataArray(String key) {
+		return (StyleData[]) values.get(key);
+	}
 	
 	public Object[] getQuickArray() {
 		return (Object[])values.values().toArray()[0];
@@ -330,6 +380,13 @@ public class FSON {
 	}
 	public boolean[] getBooleanQuickArray() {
 		return (boolean[])values.values().toArray()[0];
+	}
+	public StyleData[] getStyleDataQuickArray() {
+		return (StyleData[])values.values().toArray()[0];
+	}
+	
+	public String[] getKeys() {
+		return (String[]) values.keySet().toArray();
 	}
 	
 	public Object[] getAllValues() {
