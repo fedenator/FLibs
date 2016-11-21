@@ -1,5 +1,6 @@
 package flibs.fson;
 
+import java.sql.Savepoint;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,52 +52,59 @@ public class FSON {
 		//Saco los espacios, tabuladores y enters
 		ArrayList<Character> param = removeRedundantCharacters(str);
 		
-		//Hack =(
-		FSON fackeParent = new FSON(), fson = loadFromStringRecursive(fackeParent, param);
+		FSON fson = loadFromStringRecursive("", param);
 		this.subElements = fson.subElements;
 		this.values = fson.values;
 		
 	}
 	
-	private static FSON loadFromStringRecursive(FSON parent, ArrayList<Character> list) {
+	private static FSON loadFromStringRecursive(FSON fson, ArrayList<Character> list) {
+		
+	}
+	
+	private static FSON loadFromStringRecursive(String myKey, ArrayList<Character> list) {
 		FSON flag = new FSON();
+		flag.setKey(myKey);
 		
-		int bracketCounter = 0;
-		boolean inSemiclone = false;
-		ArrayList<ArrayList<Character>> subElements = new ArrayList<ArrayList<Character>>();
+		int bracketCounter = 0; //Nivel en el que estamos
+		boolean inSemiclone = false;//Si el caracter esta entre comillas
+		ArrayList<ArrayList<Character>> items = new ArrayList<ArrayList<Character>>();
 		
-		subElements.add(new ArrayList<Character>());
+		items.add(new ArrayList<Character>());
 		
-		//Separa los subelementos de mi nivel con una coma
+		//Separa los items de mi nivel con una coma
 		for (int i = 0, i2 = 0; i < list.size(); i++) {
 			Character character = list.get(i);
 			if      (character == '{')  bracketCounter++;
 			else if (character == '}')  bracketCounter--;
 			else if (character == '\"') inSemiclone = (inSemiclone) ? false : true;
+			
+			//Si es un item nuevo cambio de item seleccionado
 			else if (character == spliter) {
 				if (!inSemiclone && bracketCounter == 0) {
-					subElements.add(new ArrayList<Character>());
+					items.add(new ArrayList<Character>());
 					i2++;
 				}
 			}
+			
+			//Añado el caracter al item seleccionado
 			if (bracketCounter > 0 || character != spliter) {
-				subElements.get(i2).add(character);
+				items.get(i2).add(character);
 			}
 		}
 		
-		subElements.remove(subElements.size()-1);
+		items.remove(items.size()-1); //Hack de el ultimo ; que hace un item vacio
 		//Asigna los valores de los nodos
-		for (ArrayList<Character> subElement : subElements) {
-			
+		for (ArrayList<Character> item : items) {		
 			
 			//Si es un subElmento
-			if(subElement.contains('{')) { //Habria que revisar que las { no esten entree comillas
+			if(item.contains('{')) { //Habria que revisar que las { no esten entree comillas
 				String key = "";
 				bracketCounter = 0;
 				ArrayList<Character> arg = new ArrayList<Character>();
 				boolean bracketFound = false;
 				
-				for (Iterator<Character> iterator = subElement.iterator(); iterator.hasNext();) {
+				for (Iterator<Character> iterator = item.iterator(); iterator.hasNext();) {
 					Character character = iterator.next();
 					
 					if (character == '{') {
@@ -121,38 +129,15 @@ public class FSON {
 				}
 				
 				
-				FSON subFson = new FSON();
-				subFson = FSON.loadFromStringRecursive(flag, arg);
-				subFson.setKey(key);
-				flag.addSubElement(subFson);
+				flag.addSubElement(FSON.loadFromStringRecursive(key, arg));
 				
-			} else { //Si es un entry
+			} else { //Si es un valor
 				String line="", key="", value="";
-				for (Character character : subElement) line += "" + character;
+				for (Character character : item) line += "" + character;
 				key = line.split("" + entrySpliter)[0];
 				value = line.split("" + entrySpliter)[1];
 				
-				for (;;) {
-				
-					switch (getType(value)) {
-					case STRING:
-						flag.addValue(key, value.replaceAll("\"", ""));
-						break;
-						
-					case BOOLEAN:
-					case DOUBLE:
-					case INT:
-						flag.addValue(key, value.toString());
-						break;
-						
-					case STYLE_DATA:
-						StyleData styleData = (value.toLowerCase().contains("px"))?
-								new StyleData(StyleData.UNIT_PIXELS ,Integer.parseInt(value.toLowerCase().replace("px", ""))): 
-									new StyleData(StyleData.UNIT_PERCENTAGE ,Integer.parseInt(value.toLowerCase().replace("%", "")));
-						flag.addValue(key, styleData);
-						break;
-					}	
-				}
+				flag.saveObject(key, value);//Falta hacer la lectura de array
 			}
 		}
 		
@@ -168,9 +153,7 @@ public class FSON {
 		String flag = "";
 		String indent = "";
 		//Calculo el indent
-		for(int i = 0; i < level; i++) {
-			indent += tab;
-		}
+		for(int i = 0; i < level; i++) indent += tab;
 		
 		
 		Iterator<FSON> it = subElements.iterator();
@@ -194,11 +177,11 @@ public class FSON {
 				Object[] array = (Object[]) value;
 				
 				line += "[";
-				for (Object item : array) line += getDataFormat(item) + ",";
+				for (Object item : array) line += objToStringFormat(item) + ",";
 				line = StringUtilities.removeLastCharacter(line); //Quita la ultima coma que esta de mas
 				line += "]";
 			} else {
-				line += getDataFormat(value);
+				line += objToStringFormat(value);
 			}
 			
 			line += "" + spliter + br;
@@ -208,6 +191,7 @@ public class FSON {
 		
 		return flag;
 	}
+	
 	private static Type getType(String value) {
 		Type type = null;
 		
@@ -220,7 +204,31 @@ public class FSON {
 		return type;
 	}
 	
-	private String getDataFormat(Object obj) {
+	/**
+	 * Transforma el objecto de String a el formato valido y lo guarda
+	 */
+	private void saveObject (String key, String obj) {
+		switch (getType(obj)) {
+		case STRING:
+			this.addValue(key, obj.replaceAll("\"", ""));
+			break;
+			
+		case BOOLEAN:
+		case DOUBLE:
+		case INT:
+			this.addValue(key, obj.toString());
+			break;
+				
+		case STYLE_DATA:
+			StyleData styleData = (obj.toLowerCase().contains("px"))?
+					new StyleData(StyleData.UNIT_PIXELS ,Integer.parseInt(obj.toLowerCase().replace("px", ""))): 
+						new StyleData(StyleData.UNIT_PERCENTAGE ,Integer.parseInt(obj.toLowerCase().replace("%", "")));
+			this.addValue(key, styleData);
+			break;
+	}
+	}
+	
+	private String objToStringFormat(Object obj) {
 		String flag = "";
 		if (obj instanceof String) {
 			flag += "\"" + (String) obj + "\"";
