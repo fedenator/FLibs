@@ -1,6 +1,5 @@
 package flibs.fson;
 
-import java.sql.Savepoint;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,18 +17,23 @@ import flibs.util.StyleData;
  */
 public class FSON {
 	public enum Type {
-		STRING, INT, DOUBLE, BOOLEAN, STYLE_DATA;
+		STRING, INT, DOUBLE, BOOLEAN, STYLE_DATA, UNKNOW;
 	}
-	
 	
 	/*---------------------- Constantes -----------------------------*/
 	public static final Character tab='\t', br='\n', spliter=';', entrySpliter='=';
+	
+	public static final String[] ARRAY_CONTAINER=new String[]{"[","]"};
+	
+	public static final String EXCEPTION_ARRAY_TYPE_MESSAGE = "Array contains unsupported object types";
+	public static final String EXCEPTION_OBJECT_TYPE_MESSAGE = "Object is an unsupported type";
 
 	/*----------------------  Propiedades ---------------------------*/
 	private FSON parent;
 	private String key;
 	private ArrayList<FSON> subElements = new ArrayList<FSON>();
 	private HashMap<String, Object> values = new HashMap<String, Object>();
+	
 	/*---------------------- Constructores --------------------------*/
 	/**
 	 * Constructor completo, si el padre no es null, le dice que te agregue de subelemento
@@ -52,19 +56,9 @@ public class FSON {
 		//Saco los espacios, tabuladores y enters
 		ArrayList<Character> param = removeRedundantCharacters(str);
 		
-		FSON fson = loadFromStringRecursive("", param);
-		this.subElements = fson.subElements;
-		this.values = fson.values;
-		
+		loadFromStringRecursive(this, param);
 	}
-	
 	private static FSON loadFromStringRecursive(FSON fson, ArrayList<Character> list) {
-		
-	}
-	
-	private static FSON loadFromStringRecursive(String myKey, ArrayList<Character> list) {
-		FSON flag = new FSON();
-		flag.setKey(myKey);
 		
 		int bracketCounter = 0; //Nivel en el que estamos
 		boolean inSemiclone = false;//Si el caracter esta entre comillas
@@ -129,26 +123,29 @@ public class FSON {
 				}
 				
 				
-				flag.addSubElement(FSON.loadFromStringRecursive(key, arg));
+				fson.addSubElement(FSON.loadFromStringRecursive(key, arg));
 				
 			} else { //Si es un valor
+				
 				String line="", key="", value="";
 				for (Character character : item) line += "" + character;
 				key = line.split("" + entrySpliter)[0];
 				value = line.split("" + entrySpliter)[1];
 				
-				flag.saveObject(key, value);//Falta hacer la lectura de array
+				fson.saveObject(key, value);
 			}
 		}
 		
-		return flag;
+		return fson;
+	}
+	private static FSON loadFromStringRecursive(String myKey, ArrayList<Character> list) {
+		return loadFromStringRecursive(new FSON(myKey), list);
 	}
 	
 	@Override
 	public String toString() {
 		return toStringRecursive(0);
 	}
-	
 	private String toStringRecursive(int level) {
 		String flag = "";
 		String indent = "";
@@ -173,14 +170,15 @@ public class FSON {
 			
 			
 			//Si es un array
-			if (isArray(value)) {
+			if (value.getClass().isArray()) {
 				Object[] array = (Object[]) value;
 				
 				line += "[";
 				for (Object item : array) line += objToStringFormat(item) + ",";
 				line = StringUtilities.removeLastCharacter(line); //Quita la ultima coma que esta de mas
 				line += "]";
-			} else {
+				
+			} else { //Si es un valor solo
 				line += objToStringFormat(value);
 			}
 			
@@ -200,41 +198,75 @@ public class FSON {
 		else if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) type = Type.BOOLEAN;
 		else if (value.contains(".")) type = Type.DOUBLE;
 		else if (!value.isEmpty()) type = Type.INT;
+		else type = Type.UNKNOW;
 		
 		return type;
+	}
+	private static Type getType(Object value) {
+		Type flag = null;
+		
+		if (value instanceof String) flag = Type.STRING;
+		else if (value instanceof Integer) flag = Type.INT;
+		else if (value instanceof Double) flag = Type.DOUBLE;
+		else if (value instanceof Boolean) flag = Type.BOOLEAN;
+		else if (value instanceof StyleData) flag = Type.STYLE_DATA;
+		else flag = Type.UNKNOW;
+		
+		return flag;
 	}
 	
 	/**
 	 * Transforma el objecto de String a el formato valido y lo guarda
 	 */
 	private void saveObject (String key, String obj) {
-		switch (getType(obj)) {
-		case STRING:
-			this.addValue(key, obj.replaceAll("\"", ""));
-			break;
-			
-		case BOOLEAN:
-		case DOUBLE:
-		case INT:
-			this.addValue(key, obj.toString());
-			break;
-				
-		case STYLE_DATA:
-			StyleData styleData = (obj.toLowerCase().contains("px"))?
-					new StyleData(StyleData.UNIT_PIXELS ,Integer.parseInt(obj.toLowerCase().replace("px", ""))): 
-						new StyleData(StyleData.UNIT_PERCENTAGE ,Integer.parseInt(obj.toLowerCase().replace("%", "")));
-			this.addValue(key, styleData);
-			break;
-	}
+		if (obj.contains("[")) {
+			obj = StringUtilities.removeStrings(obj, ARRAY_CONTAINER);
+			String[] arrayObjectsString = obj.split(",");
+			Object[] arrayObjects = new Object[arrayObjectsString.length];
+			for (int i = 0; i < arrayObjectsString.length; i++)	arrayObjects[i] = getObjectFromString(arrayObjectsString[i]);
+			values.put(key, arrayObjects);
+		} else {
+			values.put(key, getObjectFromString(obj));
+		}
 	}
 	
 	private String objToStringFormat(Object obj) {
 		String flag = "";
 		if (obj instanceof String) {
 			flag += "\"" + (String) obj + "\"";
-		} else if (obj instanceof Integer || obj instanceof Double || obj instanceof Boolean) {
+		} else if (obj instanceof Integer || obj instanceof Double || obj instanceof Boolean || obj instanceof StyleData) {
 			flag += obj.toString();
 		}
+		return flag;
+	}
+	
+	private Object getObjectFromString(String obj) {
+		Object flag = null;
+		
+		switch (getType(obj)) {
+			case STRING:
+				flag = (String)obj.replaceAll("\"", "");
+				break;
+			case BOOLEAN:
+				flag = Boolean.parseBoolean(obj);
+				break;
+			case DOUBLE:
+				flag = Double.parseDouble(obj);
+				break;
+			case INT:
+				flag = Integer.parseInt(obj);
+				break;		
+			case STYLE_DATA:
+				StyleData styleData = (obj.toLowerCase().contains("px"))?
+						new StyleData(StyleData.UNIT_PIXELS ,Integer.parseInt(obj.toLowerCase().replace("px", ""))): 
+							new StyleData(StyleData.UNIT_PERCENTAGE ,Integer.parseInt(obj.toLowerCase().replace("%", "")));
+				flag = styleData;
+				break;
+			case UNKNOW:
+				//estaria bueno guardar un objecto tipo unknow para ayudar el debug de los que usen FSON
+				break;
+	}
+		
 		return flag;
 	}
 	
@@ -251,10 +283,6 @@ public class FSON {
 		}
 		
 		return flag;
-	}
-	
-	private boolean isArray(Object obj) {
-		return (obj instanceof int[] || obj instanceof double[] || obj instanceof boolean[]);
 	}
 	
 	public void clear() {
@@ -285,35 +313,12 @@ public class FSON {
 	 * No pongan llaves en el string que se rompe =P
 	 * Al que no le guste que haga un commit escapando el string
 	 */
-	public void addValue(String key, String value) {
+	public void addValue(String key, Object value) {
+		if (getType(value) == Type.UNKNOW) throw new RuntimeException(EXCEPTION_OBJECT_TYPE_MESSAGE);
 		values.put(key, value);
 	}
-	public void addValue(String key, int value) {
-		values.put(key, value);
-	}
-	public void addValue(String key, double value) {
-		values.put(key, value);
-	}
-	public void addValue(String key, boolean value) {
-		values.put(key, value);
-	}
-	public void addValue(String key, StyleData value) {
-		values.put(key, value);
-	}
-	
-	public void addArray(String key, String[] value) {
-		values.put(key, value);
-	}
-	public void addArray(String key, int[] value) {
-		values.put(key, value);
-	}
-	public void addArray(String key, double[] value) {
-		values.put(key, value);
-	}
-	public void addArray(String key, boolean[] value) {
-		values.put(key, value);
-	}
-	public void addArray(String key, StyleData[] value) {
+	public void addArray(String key, Object[] value) {
+		for (Object obj : value) if (getType(obj) == Type.UNKNOW) throw new RuntimeException(EXCEPTION_ARRAY_TYPE_MESSAGE);
 		values.put(key, value);
 	}
 	
@@ -336,25 +341,6 @@ public class FSON {
 		return (StyleData) values.get(key);
 	}
 	
-	public Object getQuickValue() {
-		return values.values().toArray()[0];
-	}
-	public String getStringQuickValue() {
-		return (String) values.values().iterator().next();
-	}
-	public int getIntQuickValue() {
-		return (int) values.values().iterator().next();
-	}
-	public double getDoubleQuickValue() {
-		return (double) values.values().iterator().next();
-	}
-	public boolean getBooleanQuickValue() {
-		return (boolean) values.values().iterator().next();
-	}
-	public StyleData getStyleDataQuickValue() {
-		return (StyleData) values.values().iterator().next();
-	}
-	
 	public Object[] getArray(String key) {
 		return (Object[]) values.get(key);
 	}
@@ -372,25 +358,6 @@ public class FSON {
 	}
 	public StyleData[] getStyleDataArray(String key) {
 		return (StyleData[]) values.get(key);
-	}
-	
-	public Object[] getQuickArray() {
-		return (Object[])values.values().toArray()[0];
-	}
-	public String[] getStringQuickArray() {
-		return (String[]) values.values().toArray()[0];
-	}
-	public int[] getIntQuickArray() {
-		return (int[])values.values().toArray()[0];
-	}
-	public double[] getDoubleQuickArray() {
-		return (double[])values.values().toArray()[0];
-	}
-	public boolean[] getBooleanQuickArray() {
-		return (boolean[])values.values().toArray()[0];
-	}
-	public StyleData[] getStyleDataQuickArray() {
-		return (StyleData[])values.values().toArray()[0];
 	}
 	
 	public String[] getKeys() {

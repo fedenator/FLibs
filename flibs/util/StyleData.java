@@ -31,4 +31,10 @@ public class StyleData {
 		this(UNIT_PIXELS, POSITION_RELATIVE, 0);
 	}
 	
+	@Override
+	public String toString() {
+		String unitString = (unit==UNIT_PIXELS)? "px" :"%";
+		return value + unitString;
+	}
+	
 }
