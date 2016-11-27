@@ -298,12 +298,21 @@ public class FSON {
 		subElements.add(fson);
 		if(fson.parent != this)fson.setParent(this);
 	}
+	
 	public FSON[] getSubElements() {
-		return (FSON[]) subElements.toArray();
+		return subElements.toArray(new FSON[subElements.size()]);
 	}
+//	public FSON[] getSubElements(String key) {
+//		
+//	}
+//	public FSON[] findSubElements() {
+//		
+//	}
+	
 	public FSON getSubElemet(int index) {
 		return subElements.get(index);
 	}
+		
 	public void removeSubElement(int index) {
 		subElements.remove(index);
 	}
@@ -360,10 +369,6 @@ public class FSON {
 		return (StyleData[]) values.get(key);
 	}
 	
-	public String[] getKeys() {
-		return (String[]) values.keySet().toArray();
-	}
-	
 	public Object[] getAllValues() {
 		return values.entrySet().toArray();
 	}
@@ -378,7 +383,25 @@ public class FSON {
 		values.remove(key);
 	}
 	
+	/*------------------------ Manejo de keys --------------------*/
+	public String[] getKeys() {
+		return (String[]) values.keySet().toArray();
+	}
+	public boolean hasKey(String key) {
+		boolean flag = false;
+		
+		for (String item : getKeys()) {
+			if (item == key) {
+				flag = true;
+				break;
+			}
+		}
+		
+		return flag;
+	}
+	
 	/*---------------------- Getters y Setters -------------------*/
+
 	public void setKey(String key) {
 		this.key = key;
 	}
