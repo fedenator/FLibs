@@ -3,8 +3,11 @@ package flibs.fson;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 
+import flibs.pointer.Pointer;
+import flibs.pointer.ReferencedList;
 import flibs.util.StringUtilities;
 import flibs.util.StyleData;
 
@@ -29,22 +32,22 @@ public class FSON {
 	public static final String EXCEPTION_OBJECT_TYPE_MESSAGE = "Object is an unsupported type";
 
 	/*----------------------  Propiedades ---------------------------*/
-	private FSON parent;
-	private String key;
-	private ArrayList<FSON> subElements = new ArrayList<FSON>();
+	private Pointer<FSON> parent = new Pointer<FSON>();
+	private String tag;
+	private ReferencedList<FSON> subElements = new ReferencedList<FSON>();
 	private HashMap<String, Object> values = new HashMap<String, Object>();
 	
 	/*---------------------- Constructores --------------------------*/
 	/**
 	 * Constructor completo, si el padre no es null, le dice que te agregue de subelemento
 	 */
-	public FSON(FSON parent, String key) {
-		this.key = key;
+	public FSON(FSON parent, String tag) {
+		this.tag = tag;
 		if (parent != null) setParent(parent); //El padre despues te dice que lo agregues de padre
 	}
 	
-	public FSON(String key) {
-		this.key = key;
+	public FSON(String tag) {
+		this.tag = tag;
 	}
 	
 	public FSON() {
@@ -156,7 +159,7 @@ public class FSON {
 		Iterator<FSON> it = subElements.iterator();
 		while (it.hasNext()) {
 			FSON fson = (FSON)it.next();
-			String aux = indent + fson.getKey() + " {" + br;
+			String aux = indent + fson.getTag() + " {" + br;
 			aux += fson.toStringRecursive(level + 1) + br;
 			aux += indent + "}" + spliter + br;
 			flag += aux;
@@ -296,27 +299,87 @@ public class FSON {
 	 */
 	public void addSubElement(FSON fson){
 		subElements.add(fson);
-		if(fson.parent != this)fson.setParent(this);
+		if(fson.parent.foo != this) {
+			fson.setParent(this);
+		}
 	}
-	
-	public FSON[] getSubElements() {
-		return subElements.toArray(new FSON[subElements.size()]);
-	}
-//	public FSON[] getSubElements(String key) {
-//		
-//	}
-//	public FSON[] findSubElements() {
-//		
-//	}
-	
-	public FSON getSubElemet(int index) {
-		return subElements.get(index);
-	}
-		
 	public void removeSubElement(int index) {
 		subElements.remove(index);
 	}
 	
+	public boolean hasDirectSubElement(String tag) {
+		boolean flag = false;
+		
+		for (FSON subElement : subElements) {
+			if (subElement.tag.equals(tag)) {
+				flag = true;
+				break;
+			}
+		}
+		
+		return flag;
+	}
+	public boolean hasSubElement(String key) {
+		boolean flag = false;
+		
+		if (!hasDirectSubElement(key)) {
+			for (FSON subElement : subElements) {
+				if (subElement.hasSubElement(key)) {
+					flag = true;
+					break;
+				}
+			}
+		} else {
+			flag = true;
+		}
+		
+		return flag;
+	}
+	
+	//Clones
+	public FSON[] getDirectSubElements() {
+		return subElements.toArray(new FSON[subElements.size()]);
+	}
+	public FSON[] getDirectSubElementsByTag(String tag) {
+		ArrayList<FSON> subs = new ArrayList<FSON>();
+		for (FSON subElement : subElements) if (subElement.tag == tag) subs.add(subElement);
+		return subs.toArray(new FSON[subs.size()]);
+	}
+	
+	//Refs
+	public Pointer<FSON> getSubElemetRef(int index) {
+		return subElements.getRef(index);
+	}
+	
+	public ReferencedList<FSON> getDirectSubElementsRef() {
+		return subElements;
+	}
+	public ReferencedList<FSON> getSubElementsRef() {
+		ReferencedList<FSON> flag = new ReferencedList<FSON>();
+		
+		flag.addAll(getDirectSubElementsRef());
+		for(FSON item : flag) flag.addAll(item.getDirectSubElementsRef());
+		
+		return flag;
+	}
+	
+	public ReferencedList<FSON> getDirectSubElementsRefByTag(String tag) {
+		ReferencedList<FSON> flag = new ReferencedList<FSON>();
+		
+		for (FSON subElement : subElements) if (subElement.tag.equals(tag)) flag.add(subElement);
+		
+		return flag;
+	}
+	public ReferencedList<FSON> getSubElementsRefByTag(String tag) {
+		ReferencedList<FSON> flag = new ReferencedList<FSON>();
+		
+		flag.addAll(getDirectSubElementsRefByTag(tag));
+		
+		
+		
+		return flag;
+	}
+
 	/*------------------------- Manejo de valores -------------------*/
 	/**
 	 * No pongan llaves en el string que se rompe =P
@@ -384,16 +447,43 @@ public class FSON {
 	}
 	
 	/*------------------------ Manejo de keys --------------------*/
-	public String[] getKeys() {
-		return (String[]) values.keySet().toArray();
+	public List<String> getDirectKeys() {
+		ArrayList<String> flag = new ArrayList<String>();
+		flag.addAll(values.keySet());
+		return flag;
+	}
+	public List<String> getKeys() {
+		ArrayList<String> flag = new ArrayList<String>();
+		
+		flag.addAll(getDirectKeys());
+		for (FSON subElement : subElements) flag.addAll(subElement.getKeys());
+		
+		return flag;
+	}
+	
+	public boolean hasDirectKey(String key) {
+		boolean flag = false;
+		
+		for (String item : getDirectKeys()) {
+			if (item.equals(key)) {
+				flag = true;
+				break;
+			}
+		}
+		
+		return flag;
 	}
 	public boolean hasKey(String key) {
 		boolean flag = false;
 		
-		for (String item : getKeys()) {
-			if (item == key) {
-				flag = true;
-				break;
+		if (hasDirectKey(key)) {
+			flag = true;
+		} else {
+			for (FSON subElement : subElements) {
+				if (subElement.hasKey(key)) {
+					flag = true;
+					break;
+				}
 			}
 		}
 		
@@ -402,18 +492,18 @@ public class FSON {
 	
 	/*---------------------- Getters y Setters -------------------*/
 
-	public void setKey(String key) {
-		this.key = key;
+	public void setTag(String tag) {
+		this.tag = tag;
 	}
-	public String getKey() {
-		return key;
+	public String getTag() {
+		return tag;
 	}
 	
 	public void setParent(FSON parent) {
-		this.parent = parent;
+		this.parent.foo = parent;
 		if(!parent.subElements.contains(this)) parent.addSubElement(this);
 	}
-	public FSON getParent() {
+	public Pointer<FSON> getParent() {
 		return parent;
 	}
 	
