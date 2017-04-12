@@ -342,7 +342,7 @@ public class FSON {
 	}
 	public FSON[] getDirectSubElementsByTag(String tag) {
 		ArrayList<FSON> subs = new ArrayList<FSON>();
-		for (FSON subElement : subElements) if (subElement.tag == tag) subs.add(subElement);
+		for (FSON subElement : subElements) if (subElement.tag.equals(tag)) subs.add(subElement);
 		return subs.toArray(new FSON[subs.size()]);
 	}
 	
@@ -404,7 +404,17 @@ public class FSON {
 		return (int) values.get(key);
 	}
 	public double getDoubleValue(String key) {
-		return (double) values.get(key);
+		double flag = 0;
+		Object ob = values.get(key);
+		
+		if (ob instanceof Integer) {
+			int aux = (int) ob;
+			flag = (double) aux;
+		} else {
+			flag = (double) ob;
+		}
+		
+		return flag;
 	}
 	public boolean getBooleanValue(String key) {
 		return (boolean) values.get(key);
