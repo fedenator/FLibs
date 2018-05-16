@@ -1,4 +1,4 @@
-package flibs.printer;
+package org.fpalacios.flibs.printer;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -17,19 +17,18 @@ import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.PrintQuality;
 
 public class FPrinter {
-    
+
     public static void print(BufferedImage image, int w, int h, MediaSize mediaSize) {
 
     	PrinterJob pj = PrinterJob.getPrinterJob();
-//    	if (pj.printDialog()) {
     	PageFormat pf = pj.defaultPage();
     	Paper paper = pf.getPaper();
     	PrintRequestAttributeSet printAttributes = new HashPrintRequestAttributeSet();
     	printAttributes.add(PrintQuality.HIGH);
     	printAttributes.add(new MediaPrintableArea(0, 0, mediaSize.getX(MediaSize.INCH), mediaSize.getY(MediaSize.INCH), MediaSize.INCH));
-    	
-    	
-    	
+
+
+
     	double width = fromCMToPPI(w);
     	double height = fromCMToPPI(h);
     	paper.setSize(width, height);
@@ -41,25 +40,14 @@ public class FPrinter {
     	pf.setOrientation(PageFormat.PORTRAIT);
     	pf.setPaper(paper);
     	PageFormat validatePage = pj.validatePage(pf);
-    	
+
     	pj.setPrintable(new MyPrintable(image), validatePage);
     	try {
-//    		new DisplayImage();
     		pj.print(printAttributes);
     	} catch (Exception ex) {
     		ex.printStackTrace();
     	}
-//    	}
 	}
-
-//    public static void main(String[] args) {
-//    	try {
-//    		FPrinter.print(ImageIO.read(new File("C:\\Users\\Fede\\Desktop\\SaveDirectorie\\11-MARCH-2017--16-36-35-2.png")),
-//    				10, 15, MediaSize.ISO.A6);
-//    	} catch (IOException exp) {
-//    		exp.printStackTrace();
-//    	}
-//    }
 
     protected static double fromPPItoCM(double dpi) {
         return dpi / 72 / 0.393700787;
@@ -90,11 +78,11 @@ public class FPrinter {
     private static class MyPrintable implements Printable {
 
     	private BufferedImage image;
-    	
+
     	public MyPrintable(BufferedImage image) {
 			this.image = image;
 		}
-    	
+
         @Override
         public int print(Graphics graphics, PageFormat pageFormat,
                                          int pageIndex) throws PrinterException {

@@ -1,4 +1,4 @@
-package flibs.fson;
+package org.fpalacios.flibs.fson;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -23,26 +23,26 @@ public class FsonFileManagement {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static FSON loadFsonFile(String path) {
 		FSON flag = new FSON();
-		
+
 		try{
 			File file = new File(path);
 			FileReader fileReader = new FileReader(file.getAbsoluteFile());
 			BufferedReader reader = new BufferedReader(fileReader);
-			
+
 			String text = "", line="";
 			while((line=reader.readLine()) != null){
 				text += line;
 			}
 			reader.close();
-			
+
 			flag.loadFromString(text);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return flag;
 	}
 }

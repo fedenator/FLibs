@@ -1,10 +1,10 @@
-package flibs.pointer;
+package org.fpalacios.flibs.pointer;
 
 public class Pointer<T> {
 	public T foo;
-	
+
 	public Pointer() {
-		
+
 	}
 	public Pointer(T foo) {
 		this.foo = foo;

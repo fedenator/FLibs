@@ -1,4 +1,4 @@
-package flibs.util;
+package org.fpalacios.flibs.util;
 
 public class FMath {
 	public static double getPortentage(double num, double porcentage) {

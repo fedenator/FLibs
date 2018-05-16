@@ -1,4 +1,4 @@
-package flibs.util;
+package org.fpalacios.flibs.util;
 
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -20,13 +20,13 @@ public class Loader {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		return convertedImage;
 	}
-	
+
 	public static boolean saveImage(BufferedImage image, String path, String format) {
 		boolean flag = true;
-		
+
 		try {
 			File file = new File(path);
 			file.createNewFile();
@@ -35,35 +35,35 @@ public class Loader {
 			e.printStackTrace();
 			flag = false;
 		}
-		
+
 		return flag;
 	}
-	
+
 	public static BufferedImage loadOriginalBufferImage(String path) {
 		BufferedImage image = null;
-		
+
 		try {
 			image = ImageIO.read(new File(path));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return image;
 	}
-	
+
 	public static BufferedImage convertToCompatibleImage(BufferedImage image) {
 		BufferedImage convertedImage = null;
-		
+
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment ();
 	    GraphicsDevice gd = ge.getDefaultScreenDevice ();
 	    GraphicsConfiguration gc = gd.getDefaultConfiguration ();
-	    convertedImage = gc.createCompatibleImage (image.getWidth (), 
-	                                               image.getHeight (), 
+	    convertedImage = gc.createCompatibleImage (image.getWidth (),
+	                                               image.getHeight (),
 	                                               image.getTransparency () );
 	    Graphics2D g2d = convertedImage.createGraphics ();
 	    g2d.drawImage ( image, 0, 0, image.getWidth (), image.getHeight (), null );
 	    g2d.dispose();
-	    
+
 	    return convertedImage;
 	}
 }
