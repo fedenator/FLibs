@@ -23,7 +23,7 @@ public class WidthProperty extends Property<Integer> implements ComponentListene
     }
 
     public void setValue(Integer val) {
-        comp.setSize( new Dimension(val, comp.getHeight()) );
+        comp.setPreferredSize( new Dimension(val, comp.getHeight()) );
         notifyChange(val);
     }
 
@@ -32,7 +32,7 @@ public class WidthProperty extends Property<Integer> implements ComponentListene
     }
 
     public void reciveChange(Integer newVal) {
-        comp.setSize( new Dimension ( proccessChange(newVal), comp.getHeight() ) );
+        comp.setPreferredSize( new Dimension(proccessChange(newVal), comp.getPreferredSize().height) );
     }
 
 }

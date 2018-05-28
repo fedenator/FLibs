@@ -31,6 +31,7 @@ public class FlowPane extends FPanel implements ComponentListener {
         this.vDirection = v;
         this.hDirection = h;
         this.setLayout(null);
+        this.addComponentListener(this);
     }
 
     public FlowPane() {
@@ -54,27 +55,27 @@ public class FlowPane extends FPanel implements ComponentListener {
 
             //Si la prioridad es por filas, la linea es horizontal
             if (hDirection == HDirection.LeftToRight) {
-                lineBegin = getX();
-                lineEnd   = getX() + getWidth();
+                lineBegin = 0;
+                lineEnd   = getWidth();
             } else {
-                lineBegin = getX() + getWidth();
-                lineEnd   = getX();
+                lineBegin = getWidth();
+                lineEnd   = 0;
             }
 
             //Y el borde de la linea es vertical
-            lineBorderBegin = (vDirection == VDirection.TopToBottom)? getY() : getY() + getHeight();
+            lineBorderBegin = (vDirection == VDirection.TopToBottom)? 0 : getHeight();
 
         } else {
             //Si la prioridad es por columnas, el borde de la linea es horizontal
-            lineBorderBegin = (hDirection == HDirection.LeftToRight)? getX() : getX() + getWidth();
+            lineBorderBegin = (hDirection == HDirection.LeftToRight)? 0 : getWidth();
 
             //Y la linea es vertical
             if (vDirection == VDirection.TopToBottom) {
-                 lineBegin = getY();
-                 lineEnd   = getY() + getHeight();
+                 lineBegin = 0;
+                 lineEnd   = getHeight();
             } else {
-                lineBegin = getY() + getHeight();
-                lineEnd   = getY();
+                lineBegin = getHeight();
+                lineEnd   = 0;
             }
         }
 
@@ -95,19 +96,38 @@ public class FlowPane extends FPanel implements ComponentListener {
             }
 
             //Si no entra en la linea hago un overflow a la siguente
-            if (currentLinePos + compLenght >=  lineEnd) {
+            //TODO: Usar valores absolutos para las distancias
+            if (currentLinePos + compLenght >= lineEnd) {
                 lineBorderBegin = lineBorderEnd;
                 currentLinePos  = lineBegin;
             }
 
             //Si la distancia entre los bordes es mayor a la guardad, la actualiza
             if ( lineBorderEnd - lineBorderBegin < compThickness ) lineBorderEnd = lineBorderBegin + compThickness;
+
+            if (priority == Priority.ByRows)
+                comp.setBounds(currentLinePos, lineBorderBegin, compPrefSize.width, compPrefSize.height);
+            else
+                comp.setBounds(lineBorderBegin, currentLinePos, compPrefSize.width, compPrefSize.height);
+
+            currentLinePos += compLenght;
         }
+
+        repaint();
 
     }
 
-    public void componentShown  (ComponentEvent e) {}
+    public Component add(Component comp) {
+        super.add(comp);
+        alignComponents();
+        return comp;
+    }
+
     public void componentHidden (ComponentEvent e) {}
+
+    public void componentShown(ComponentEvent e) {
+        alignComponents();
+    }
 
     public void componentResized(ComponentEvent e) {
         alignComponents();

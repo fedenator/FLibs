@@ -6,6 +6,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.Component;
 
 public class HeightProperty extends Property<Integer> implements ComponentListener {
+
     private Component comp;
 
     public HeightProperty(Component comp) {
@@ -22,15 +23,15 @@ public class HeightProperty extends Property<Integer> implements ComponentListen
     }
 
     public void setValue(Integer val) {
-        comp.setSize( new Dimension(comp.getWidth(), val) );
+        comp.setPreferredSize( new Dimension(comp.getWidth(), val) );
         notifyChange(val);
     }
 
     public Integer getValue() {
-        return comp.getWidth();
+        return comp.getHeight();
     }
 
     public void reciveChange(Integer newVal) {
-        comp.setSize( new Dimension ( proccessChange(newVal), comp.getHeight() ) );
+        comp.setPreferredSize( new Dimension(comp.getPreferredSize().width, proccessChange(newVal)) );
     }
 }
