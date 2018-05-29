@@ -8,6 +8,8 @@ import java.awt.event.ComponentListener;
 
 import org.fpalacios.flibs.swingx.components.FPanel;
 
+import org.fpalacios.flibs.swingx.Margin;
+
 public class FlowPane extends FPanel implements ComponentListener {
 
     private static final long serialVersionUID = 1l;
@@ -20,21 +22,24 @@ public class FlowPane extends FPanel implements ComponentListener {
     public enum HDirection { LeftToRight, RightToLeft }
 
     /*----------------------------- Propiedades ------------------------------*/
-    private Priority priority;
+    protected Priority priority;
 
-    private VDirection vDirection;
-    private HDirection hDirection;
+    protected VDirection vDirection;
+    protected HDirection hDirection;
 
-    private int hSpace, vSpace;
+    protected int hSpace, vSpace;
+    protected Margin margin;
 
     /*---------------------------- Constructors ------------------------------*/
-    public FlowPane(Priority p, VDirection v, HDirection h, int hSpace, int vSpace) {
+    public FlowPane(Priority p, VDirection v, HDirection h, int hSpace, int vSpace, Margin margin) {
         this.priority   = p;
         this.vDirection = v;
         this.hDirection = h;
 
         this.hSpace = hSpace;
         this.vSpace = vSpace;
+
+        this.margin = margin;
 
         this.setLayout(null);
         this.addComponentListener(this);
@@ -45,7 +50,7 @@ public class FlowPane extends FPanel implements ComponentListener {
             Priority.ByRows,
             VDirection.TopToBottom,
             HDirection.LeftToRight,
-            10, 10
+            10, 10, new Margin()
         );
     }
 
@@ -63,43 +68,42 @@ public class FlowPane extends FPanel implements ComponentListener {
 
             //Si la prioridad es por filas, la linea es horizontal
             if (hDirection == HDirection.LeftToRight) {
-                lineBegin = 0;
+                lineBegin = margin.left;
                 compSpace = hSpace;
             } else {
-                lineBegin = getWidth();
+                lineBegin = getWidth() - margin.right;
                 compSpace = -hSpace;
             }
 
-            lineLength = getWidth();
+            lineLength = getWidth() - margin.left - margin.right;
 
             //Y el borde de la linea es vertical
             if (vDirection == VDirection.TopToBottom) {
-                lineBorderBegin = 0;
+                lineBorderBegin = margin.top;
                 lineSpace       = vSpace;
             } else {
-                lineBorderBegin = getHeight();
+                lineBorderBegin = getHeight() - margin.bottom;
                 lineSpace       = -vSpace;
             }
 
         } else {
             //Si la prioridad es por columnas, la linea es vertical
             if (vDirection == VDirection.TopToBottom) {
-                lineBegin = 0;
+                lineBegin = margin.top;
                 compSpace = vSpace;
             } else {
-                lineBegin = getHeight();
+                lineBegin = getHeight() - margin.bottom;
                 compSpace = -vSpace;
             }
 
-            lineLength = getHeight();
+            lineLength = getHeight() - margin.top - margin.bottom;
 
             //Y el borde de la linea es horizontal
-            lineBorderBegin = (hDirection == HDirection.LeftToRight)? 0 : getWidth();
             if (hDirection == HDirection.LeftToRight) {
-                lineBorderBegin = 0;
+                lineBorderBegin = margin.left;
                 lineSpace       = hSpace;
             } else {
-                lineBorderBegin = getWidth();
+                lineBorderBegin = getWidth() - margin.right;
                 lineSpace       = -hSpace;
             }
         }
