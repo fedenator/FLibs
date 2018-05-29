@@ -25,11 +25,17 @@ public class FlowPane extends FPanel implements ComponentListener {
     private VDirection vDirection;
     private HDirection hDirection;
 
+    private int hSpace, vSpace;
+
     /*---------------------------- Constructors ------------------------------*/
-    public FlowPane(Priority p, VDirection v, HDirection h) {
+    public FlowPane(Priority p, VDirection v, HDirection h, int hSpace, int vSpace) {
         this.priority   = p;
         this.vDirection = v;
         this.hDirection = h;
+
+        this.hSpace = hSpace;
+        this.vSpace = vSpace;
+
         this.setLayout(null);
         this.addComponentListener(this);
     }
@@ -38,44 +44,63 @@ public class FlowPane extends FPanel implements ComponentListener {
         this(
             Priority.ByRows,
             VDirection.TopToBottom,
-            HDirection.LeftToRight
+            HDirection.LeftToRight,
+            10, 10
         );
     }
 
     /*----------------------------- Funciones --------------------------------*/
     public void alignComponents() {
 
-        //Posicion inicial, posicion final y posicion actual de cada liea
-        int lineBegin, lineEnd, currentLinePos;
+        //Posicion inicial, largo de la fila y posicion actual de cada liea
+        int lineBegin, lineLength, currentLinePos;
 
         //Distancia necesaria entre los bordes de la linea
         int lineBorderBegin, lineBorderEnd;
+        int lineSpace, compSpace;
 
         if (priority == Priority.ByRows) {
 
             //Si la prioridad es por filas, la linea es horizontal
             if (hDirection == HDirection.LeftToRight) {
                 lineBegin = 0;
-                lineEnd   = getWidth();
+                compSpace = hSpace;
             } else {
                 lineBegin = getWidth();
-                lineEnd   = 0;
+                compSpace = -hSpace;
             }
 
+            lineLength = getWidth();
+
             //Y el borde de la linea es vertical
-            lineBorderBegin = (vDirection == VDirection.TopToBottom)? 0 : getHeight();
+            if (vDirection == VDirection.TopToBottom) {
+                lineBorderBegin = 0;
+                lineSpace       = vSpace;
+            } else {
+                lineBorderBegin = getHeight();
+                lineSpace       = -vSpace;
+            }
 
         } else {
-            //Si la prioridad es por columnas, el borde de la linea es horizontal
-            lineBorderBegin = (hDirection == HDirection.LeftToRight)? 0 : getWidth();
-
-            //Y la linea es vertical
+            //Si la prioridad es por columnas, la linea es vertical
             if (vDirection == VDirection.TopToBottom) {
-                 lineBegin = 0;
-                 lineEnd   = getHeight();
+                lineBegin = 0;
+                compSpace = vSpace;
             } else {
                 lineBegin = getHeight();
-                lineEnd   = 0;
+                compSpace = -vSpace;
+            }
+
+            lineLength = getHeight();
+
+            //Y el borde de la linea es horizontal
+            lineBorderBegin = (hDirection == HDirection.LeftToRight)? 0 : getWidth();
+            if (hDirection == HDirection.LeftToRight) {
+                lineBorderBegin = 0;
+                lineSpace       = hSpace;
+            } else {
+                lineBorderBegin = getWidth();
+                lineSpace       = -hSpace;
             }
         }
 
@@ -96,21 +121,20 @@ public class FlowPane extends FPanel implements ComponentListener {
             }
 
             //Si no entra en la linea hago un overflow a la siguente
-            //TODO: Usar valores absolutos para las distancias
-            if (currentLinePos + compLenght >= lineEnd) {
-                lineBorderBegin = lineBorderEnd;
+            if (Math.abs(currentLinePos) + Math.abs(compSpace) + Math.abs(compLenght) >= lineLength) {
+                lineBorderBegin = lineBorderEnd + lineSpace;
                 currentLinePos  = lineBegin;
             }
 
             //Si la distancia entre los bordes es mayor a la guardad, la actualiza
-            if ( lineBorderEnd - lineBorderBegin < compThickness ) lineBorderEnd = lineBorderBegin + compThickness;
+            if ( Math.abs(lineBorderEnd - lineBorderBegin) < compThickness ) lineBorderEnd = lineBorderBegin + compThickness;
 
             if (priority == Priority.ByRows)
                 comp.setBounds(currentLinePos, lineBorderBegin, compPrefSize.width, compPrefSize.height);
             else
                 comp.setBounds(lineBorderBegin, currentLinePos, compPrefSize.width, compPrefSize.height);
 
-            currentLinePos += compLenght;
+            currentLinePos += compLenght + compSpace;
         }
 
         repaint();
