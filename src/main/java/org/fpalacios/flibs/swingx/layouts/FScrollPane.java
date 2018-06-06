@@ -2,8 +2,6 @@ package org.fpalacios.flibs.swingx.layouts;
 
 import javax.swing.JComponent;
 
-import org.fpalacios.flibs.swingx.components.FPanel;
-
 import org.fpalacios.flibs.swingx.binding.YProperty;
 import org.fpalacios.flibs.swingx.binding.XProperty;
 import org.fpalacios.flibs.swingx.binding.WidthProperty;

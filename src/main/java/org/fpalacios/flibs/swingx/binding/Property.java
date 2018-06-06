@@ -20,10 +20,13 @@ public abstract class Property<T> extends Observable<T> implements Observer<T> {
         this.target = target;
         target.addObserver(this);
         this.lambda = lambda;
+        setValue( proccessChange(target.getValue()) );
     }
 
     public void bind(Observable<T> target) {
         bind(target, null);
     }
+
+    public abstract void setValue(T value);
 
 }

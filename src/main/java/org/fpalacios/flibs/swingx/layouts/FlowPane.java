@@ -6,9 +6,7 @@ import java.awt.Dimension;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
-import org.fpalacios.flibs.swingx.components.FPanel;
-
-import org.fpalacios.flibs.swingx.Margin;
+import org.fpalacios.flibs.swingx.style.Margin;
 
 public class FlowPane extends FPanel implements ComponentListener {
 

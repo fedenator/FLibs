@@ -1,4 +1,4 @@
-package org.fpalacios.flibs.swingx;
+package org.fpalacios.flibs.swingx.style;
 
 public class Margin {
     public int top, bottom, left, right;

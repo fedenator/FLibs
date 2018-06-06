@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import org.fpalacios.flibs.pointer.Pointer;
 import org.fpalacios.flibs.pointer.ReferencedList;
 import org.fpalacios.flibs.util.StringUtilities;
-import org.fpalacios.flibs.util.StyleData;
+import org.fpalacios.flibs.swingx.style.StyleData;
 
 /**
  * Un elemento que puede tener valores y sub elementos
@@ -261,8 +261,8 @@ public class FSON {
 				break;
 			case STYLE_DATA:
 				StyleData styleData = (obj.toLowerCase().contains("px"))?
-						new StyleData(StyleData.UNIT_PIXELS ,Integer.parseInt(obj.toLowerCase().replace("px", ""))):
-							new StyleData(StyleData.UNIT_PERCENTAGE ,Integer.parseInt(obj.toLowerCase().replace("%", "")));
+						new StyleData(StyleData.Unit.PIXELS ,Integer.parseInt(obj.toLowerCase().replace("px", ""))):
+							new StyleData(StyleData.Unit.PERCENTAGE ,Integer.parseInt(obj.toLowerCase().replace("%", "")));
 				flag = styleData;
 				break;
 			case UNKNOW:

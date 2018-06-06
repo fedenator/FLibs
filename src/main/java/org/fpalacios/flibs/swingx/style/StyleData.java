@@ -1,4 +1,4 @@
-package org.fpalacios.flibs.util;
+package org.fpalacios.flibs.swingx.style;
 
 /**
  * Representa un dato que puede ser absoluto o relativo
@@ -6,28 +6,28 @@ package org.fpalacios.flibs.util;
  *
  */
 public class StyleData {
-	public static final byte UNIT_PIXELS=0, UNIT_PERCENTAGE=1;
+	public enum Unit { PIXELS, PERCENTAGE }
 
-	public byte unit;
+	public Unit unit;
 	public int value;
 
-	public StyleData(byte unit, int value) {
+	public StyleData(Unit unit, int value) {
 		this.unit = unit;
 		this.value = value;
 	}
 
 
 	public StyleData(int value) {
-		this(UNIT_PIXELS, value);
+		this(Unit.PIXELS, value);
 	}
 
 	public StyleData() {
-		this(UNIT_PIXELS, 0);
+		this(Unit.PIXELS, 0);
 	}
 
 	@Override
 	public String toString() {
-		String unitString = (unit==UNIT_PIXELS)? "px" :"%";
+		String unitString = (unit == Unit.PIXELS)? "px" :"%";
 		return value + unitString;
 	}
 

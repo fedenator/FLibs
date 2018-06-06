@@ -32,6 +32,11 @@ public class JTextFieldTextProperty extends Property<String> {
         textField.setText(text);
     }
 
+    public void setValue(String value) {
+        textField.setText( proccessChange(value) );
+        notifyChange( textField.getText() );
+    }
+
     public String getValue() {
         return textField.getText();
     }

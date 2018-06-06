@@ -1,6 +1,5 @@
 package org.fpalacios.flibs.swingx.layouts;
 
-import org.fpalacios.flibs.swingx.components.FPanel;
 import java.awt.BorderLayout;
 
 import javax.swing.JComponent;
