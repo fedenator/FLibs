@@ -1,13 +1,16 @@
 package org.fpalacios.flibs.swingx.style;
 
 public class Margin {
-    public int top, bottom, left, right;
+    public StyleData top    = new StyleData();
+    public StyleData bottom = new StyleData();
+    public StyleData left   = new StyleData();
+    public StyleData right  = new StyleData();
 
     public Margin(int top, int bottom, int left, int right) {
-        this.top    = top;
-        this.bottom = bottom;
-        this.left   = left;
-        this.right  = right;
+        this.top.value.setValue   (top);
+        this.bottom.value.setValue(bottom);
+        this.left.value.setValue  (left);
+        this.right.value.setValue (right);
     }
 
     public Margin(int hMargin, int vMargin) {

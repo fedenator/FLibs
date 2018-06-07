@@ -14,10 +14,8 @@ public class StyleSheet {
 
     public Border border;
 
-    public String[] classes;
-
-    public StyleSheet(String... classes) {
-        this.classes = classes;
+    public StyleSheet() {
+        
     }
 
 }
