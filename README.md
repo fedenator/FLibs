@@ -13,3 +13,6 @@ Las librerias esta hechas en java y hay un modulo que añade la funcionalidad pa
     Una extension del framework javax.swing para incluir feathures inspiradas en javafx
 * **printing**:  
     Una libreria que facilita funciones comunes para imprimir
+
+### TODOS:
+* nocion de efectosen swingx
