@@ -10,9 +10,9 @@ Las librerias esta hechas en java y hay un modulo que añade la funcionalidad pa
 * **engines**:  
     Un framework modular para intercoectar motores de distintos tipos(ej: motor de fisicas, de pintado, etc...)
 * **swingx**:  
-    Una extension del framework javax.swing para incluir feathures inspiradas en javafx
+    Una extension del framework javax.swing para incluir features inspiradas en javafx
 * **printing**:  
     Una libreria que facilita funciones comunes para imprimir
 
 ### TODOS:
-* nocion de efectosen swingx
+* nocion de efectos en swingx
