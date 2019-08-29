@@ -6,7 +6,7 @@ Las librerias esta hechas en java y hay un modulo que añade la funcionalidad pa
 
 ### Esta compuesta por los modulos:
 * **fson**:  
-    Un DLS parecido a JSon, pero con más feathures y tipos de datos
+    Un DLS parecido a JSon, pero con más features y tipos de datos
 * **engines**:  
     Un framework modular para intercoectar motores de distintos tipos(ej: motor de fisicas, de pintado, etc...)
 * **swingx**:  
